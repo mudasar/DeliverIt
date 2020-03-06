@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DeliveryIt.Models;
 using DeliveryIt.ViewModels;
+using DeliveryIt.ViewModels.User;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

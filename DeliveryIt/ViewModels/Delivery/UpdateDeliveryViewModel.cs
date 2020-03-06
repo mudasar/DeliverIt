@@ -1,6 +1,6 @@
-﻿namespace DeliveryIt.ViewModels
+﻿namespace DeliveryIt.ViewModels.Delivery
 {
-    public class UpdatePartnerViewModel
+    public class UpdateDeliveryViewModel
     {
         public string Name { get; set; }
         public int Id { get; set; }

@@ -2,6 +2,7 @@
 using DeliveryIt.Controllers;
 using DeliveryIt.Models;
 using DeliveryIt.ViewModels;
+using DeliveryIt.ViewModels.User;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -10,7 +11,7 @@ namespace DeliverIt.Tests.Controllers
     public class UserControllerTests
     {
         [Fact()]
-        public async void GetAllPartnersTest()
+        public async void GetAllUsersTest()
         {
             var controller = new UserController();
             var users = await controller.Get();
