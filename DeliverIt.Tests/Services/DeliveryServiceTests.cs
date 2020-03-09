@@ -105,7 +105,24 @@ namespace DeliverIt.Tests.Services
             var newDelivery = await deliveryService.CreateDelivery(new Delivery
             {
                OrderId =  50,
-               Status = DeliveryStatus.Approved
+               Status = DeliveryStatus.Approved,
+               AccessWindow = new AccessWindow
+               {
+                   StartTime = DateTime.Now,
+                   EndTime = DateTime.Now.AddHours(2)
+               },
+               Sender = new Partner
+               {
+                   Name = "Ikea"
+               },
+               Recipient = new User
+               {
+                   FirstName = "John",
+                   LastName = "Doe",
+                   Email = "john.doe@google.com",
+                   Address = "Test Street, London",
+                   Phone = "0845345"
+               }
             });
 
             var delivery = await deliveryService.RemoveDelivery(newDelivery.Id);

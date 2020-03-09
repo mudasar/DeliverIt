@@ -1,8 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DeliverIt.ViewModels.Partner
 {
-    public class CreatePartnerViewModel
+    public class PartnerLoginViewModel
     {
         [Required(AllowEmptyStrings = false)]
         [StringLength(100, ErrorMessage = "Invalid Length", MinimumLength = 1)]
@@ -11,6 +15,5 @@ namespace DeliverIt.ViewModels.Partner
         [Required(AllowEmptyStrings = false)]
         [StringLength(50, ErrorMessage = "Invalid Length", MinimumLength = 5)]
         public string Password { get; set; }
-
     }
 }

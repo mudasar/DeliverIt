@@ -13,5 +13,6 @@ namespace DeliverIt.Services
         Task<Partner> UpdatePartner(Partner partner);
         Task<bool> PartnerExists(int id);
         Task<bool> PartnerExists(string name);
+        Task<Partner> AuthenticatePartner(string name, string password);
     }
 }

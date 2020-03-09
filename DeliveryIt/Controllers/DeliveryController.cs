@@ -55,6 +55,11 @@ namespace DeliverIt.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] CreateDeliveryViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            } 
+
             if (await deliveryService.DeliveryExists(model.OrderId))
             {
                 return BadRequest("Delivery for this order already exists");
@@ -74,7 +79,7 @@ namespace DeliverIt.Controllers
           
             var delivery = await deliveryService.CreateDelivery(newDelivery);
 
-            var deliveryModel = mapper.Map<DeliveryViewModel>(delivery);
+            var deliveryModel = mapper.Map<DeliveryViewModel>(await deliveryService.GetDeliveryById(delivery.Id));
             return Ok(deliveryModel);
         }
 
@@ -82,6 +87,11 @@ namespace DeliverIt.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] UpdateDeliveryViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            } 
+
             if (id != model.Id)
             {
                 return NotFound($"Delivery with id {id} was not found");

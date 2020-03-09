@@ -10,13 +10,14 @@ using System.Threading.Tasks;
 
 namespace DeliverIt.Helpers
 {
-    public class AutomapperProfile : Profile
+    public class AutoMapperProfile : Profile
     {
-        public AutomapperProfile()
+        public AutoMapperProfile()
         {
             CreateMap<CreateUserViewModel, User>();
+            CreateMap<UserRegisterViewModel, User>();
             CreateMap<UpdateUserViewModel, User>();
-            CreateMap<User, UserViewModel>();
+            CreateMap<User, UserViewModel>().ForMember(dest => dest.PhoneNumber, src => src.MapFrom(m => m.Phone));
 
             CreateMap<CreatePartnerViewModel, Partner>();
             CreateMap<UpdatePartnerViewModel, Partner>();
@@ -35,15 +36,18 @@ namespace DeliverIt.Helpers
             CreateMap<Delivery, OrderViewModel>()
                 .ForMember(destinationMember: dest => dest.OrderNumber, src => src.MapFrom(m => m.OrderId.ToString()))
                 .ForMember(dest => dest.Sender, src => src.MapFrom(m => m.Sender.Name));
+
             //CreateMap<UpdateDeliveryViewModel, AccessWindow>()
             //    .ForMember(dest => dest.StartTime, src => src.MapFrom(m => m.StartTime))
             //    .ForMember(dest => dest.EndTime, src => src.MapFrom(m => m.EndTime));
 
-            CreateMap<Delivery, DeliveryViewModel>().ForMember(dest => dest.Order, src => src.MapFrom(m => new OrderViewModel
-            {
-                OrderNumber = m.OrderId.ToString(),
-                Sender = m.Sender.Name
-            }));
+            CreateMap<Delivery, DeliveryViewModel>()
+                .ForMember(dest => dest.Status, src => src.MapFrom(m => Enum.GetName(typeof(DeliveryStatus), m.Status)))
+                .ForMember(dest => dest.Order, src => src.MapFrom(m => new OrderViewModel
+                {
+                    OrderNumber = m.OrderId.ToString(),
+                    Sender = m.Sender.Name
+                }));
         }
     }
 }

@@ -13,5 +13,8 @@ namespace DeliverIt.Models
         [StringLength(200, MinimumLength = 1)]
         public string Name { get; set; }
 
+        [Required(AllowEmptyStrings = false)]
+        [StringLength(50, ErrorMessage = "Invalid Length", MinimumLength = 5)]
+        public string Password { get; set; }
     }
 }

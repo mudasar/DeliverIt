@@ -56,7 +56,7 @@ namespace DeliverIt
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseSerilog().UseStartup<Startup>();
                 });
     }
 }

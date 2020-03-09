@@ -27,5 +27,8 @@ namespace DeliverIt.Models
         [Required]
         [EmailAddress]
         public string Email { get; set; }
+        [Required]
+        [StringLength(200, MinimumLength = 5)]
+        public string Password { get; set; }
     }
 }

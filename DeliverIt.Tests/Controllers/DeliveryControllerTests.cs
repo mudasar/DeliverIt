@@ -18,6 +18,7 @@ namespace DeliverIt.Tests.Controllers
         private IMapper mapper;
         private IDeliveryService deliveryService;
         private DeliverItContext dbContext;
+        
 
         private DeliverItContext dbSqlite;
 
@@ -34,12 +35,12 @@ namespace DeliverIt.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: "Add_writes_to_database")
                 .Options;
 
-            //if (File.Exists("deliveryittest.db"))
-            //{
-            //    File.Delete("deliveryittest.db");
-            //}
+            if (File.Exists("deliveryittest.db"))
+            {
+                File.Delete("deliveryittest.db");
+            }
 
-            
+
 
             var sqliteOptions = new DbContextOptionsBuilder<DeliverItContext>().UseSqlite("Data Source=deliveryittest.db", builder =>
             {
@@ -155,15 +156,42 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void GetSingleDeliveryTest()
         {
-            var controller = new DeliveryController(deliveryService, mapper); ;
-            var response = await controller.Get(2);
-            var okResult = response as OkObjectResult;
-            Assert.NotNull(okResult);
-            Assert.Equal(200, okResult.StatusCode);
-            Assert.NotNull(okResult.Value);
+            var delivery = new Delivery
+            {
+                OrderId = 10,
+                Status = DeliveryStatus.Approved,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
 
-            var delivery = okResult.Value as DeliveryViewModel;
-            Assert.Equal(2, delivery.Id);
+            var controller = new DeliveryController(deliveryService, mapper); ;
+           
+            
+            var response1 = await controller.Get(delivery.Id);
+            var okResult1 = response1 as OkObjectResult;
+            Assert.NotNull(okResult1);
+            Assert.Equal(200, okResult1.StatusCode);
+            Assert.NotNull(okResult1.Value);
+
+            var delivery1 = okResult1.Value as DeliveryViewModel;
+            Assert.Equal(delivery.Id, delivery1.Id);
         }
 
 
@@ -177,29 +205,6 @@ namespace DeliverIt.Tests.Controllers
             Assert.Equal(404, notFoundResult.StatusCode);
         }
 
-        [Fact()]
-        public async void PostTest()
-        {
-            var controller = new DeliveryController(deliveryService, mapper); ;
-            var model = new CreateDeliveryViewModel()
-            {
-                OrderId = 30,
-                RecipientId = 1,
-                PartnerId = 1,
-                StartTime = DateTime.Now.AddDays(2).AddHours(7),
-                EndTime = DateTime.Now.AddDays(2).AddHours(10),
-
-            };
-            var response = await controller.Post(model);
-            var okResult = response as OkObjectResult;
-            Assert.NotNull(okResult);
-            Assert.Equal(200, okResult.StatusCode);
-            Assert.NotNull(okResult.Value);
-
-            var delivery = okResult.Value as DeliveryViewModel;
-            Assert.NotEqual(1, delivery.Id);
-        }
-
 
         [Fact()]
         public async void PostWithRelatedDataTest()
@@ -207,7 +212,8 @@ namespace DeliverIt.Tests.Controllers
             var relatedDeliveryService = new DeliveryService(dbSqlite);
             dbSqlite.Partners.Add(new Partner()
             {
-                Name = "Ikea"
+                Name = "Ikea",
+                Password = "password"
             });
             dbSqlite.Users.Add(new User
             {
@@ -215,11 +221,12 @@ namespace DeliverIt.Tests.Controllers
                 LastName = "Doe",
                 Email = "john.doe@google.com",
                 Address = "Test Street, London",
-                Phone = "0845345"
+                Phone = "0845345",
+                Password = "password"
             });
             dbSqlite.SaveChanges();
 
-            var controller = new DeliveryController(relatedDeliveryService, mapper); ;
+            var controller = new DeliveryController(relatedDeliveryService, mapper);
             var model = new CreateDeliveryViewModel()
             {
                 OrderId = 30,
@@ -312,7 +319,7 @@ namespace DeliverIt.Tests.Controllers
             Assert.NotNull(okResult.Value);
 
             var delivery = okResult.Value as DeliveryViewModel;
-            Assert.Equal(model.Status, delivery.Status);
+            Assert.Equal(Enum.GetName(typeof(DeliveryStatus), model.Status), delivery.Status);
         }
 
         [Fact()]
@@ -380,64 +387,190 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void ApproveDeliveryTest()
         {
-            var controller = new DeliveryController(deliveryService, mapper); ;
-            var response = await controller.ApproveDelivery(1);
-            var okResult = response as OkObjectResult;
-            Assert.NotNull(okResult);
-            Assert.Equal(200, okResult.StatusCode);
-            Assert.NotNull(okResult.Value);
+            var delivery = new Delivery
+            { 
+                OrderId = 10,
+                Status = DeliveryStatus.Created,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
 
-            var delivery = okResult.Value as DeliveryViewModel;
-            Assert.Equal(DeliveryStatus.Approved, delivery.Status);
+            var controller = new DeliveryController(deliveryService, mapper);
+            var response1 = await controller.ApproveDelivery(delivery.Id);
+            var okResult1 = response1 as OkObjectResult;
+            Assert.NotNull(okResult1);
+            Assert.Equal(200, okResult1.StatusCode);
+            Assert.NotNull(okResult1.Value);
+
+            var delivery1 = okResult1.Value as DeliveryViewModel;
+            Assert.Equal(DeliveryStatus.Approved, Enum.Parse<DeliveryStatus>( delivery1.Status, true));
         }
 
         [Fact()]
         public async void CompleteDeliveryTest()
         {
-            var controller = new DeliveryController(deliveryService, mapper); ;
-            var response = await controller.CompleteDelivery(2);
-            var okResult = response as OkObjectResult;
-            Assert.NotNull(okResult);
-            Assert.Equal(200, okResult.StatusCode);
-            Assert.NotNull(okResult.Value);
+            var delivery = new Delivery
+            {
+                OrderId = 10,
+                Status = DeliveryStatus.Approved,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
 
-            var delivery = okResult.Value as DeliveryViewModel;
-            Assert.Equal(DeliveryStatus.Completed, delivery.Status);
+
+            var controller = new DeliveryController(deliveryService, mapper); ;
+           
+            var response1 = await controller.CompleteDelivery(delivery.Id);
+            var okResult1 = response1 as OkObjectResult;
+            Assert.NotNull(okResult1);
+            Assert.Equal(200, okResult1.StatusCode);
+            Assert.NotNull(okResult1.Value);
+
+            var delivery1= okResult1.Value as DeliveryViewModel;
+            Assert.Equal(DeliveryStatus.Completed, Enum.Parse<DeliveryStatus>(delivery1.Status, true));
         }
 
         [Fact()]
         public async void CancelDeliveryTest()
         {
+            var delivery = new Delivery
+            {
+                OrderId = 10,
+                Status = DeliveryStatus.Approved,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
+
             var controller = new DeliveryController(deliveryService, mapper); ;
-            var response = await controller.CancelDelivery(3);
+            var response = await controller.CancelDelivery(delivery.Id);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
             Assert.Equal(200, okResult.StatusCode);
             Assert.NotNull(okResult.Value);
 
-            var delivery = okResult.Value as DeliveryViewModel;
-            Assert.Equal(DeliveryStatus.Cancelled, delivery.Status);
+            var delivery1 = okResult.Value as DeliveryViewModel;
+            Assert.Equal(DeliveryStatus.Cancelled, Enum.Parse<DeliveryStatus>(delivery1.Status, true));
         }
 
         [Fact()]
         public async void ExpireDeliveryTest()
         {
+            var delivery = new Delivery
+            {
+                OrderId = 10,
+                Status = DeliveryStatus.Approved,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
             var controller = new DeliveryController(deliveryService, mapper); ;
-            var response = await controller.ExpireDelivery(4);
+            var response = await controller.ExpireDelivery(delivery.Id);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
             Assert.Equal(200, okResult.StatusCode);
             Assert.NotNull(okResult.Value);
 
-            var delivery = okResult.Value as DeliveryViewModel;
-            Assert.Equal(DeliveryStatus.Expired, delivery.Status);
+            var delivery1 = okResult.Value as DeliveryViewModel;
+            Assert.Equal(DeliveryStatus.Expired, Enum.Parse<DeliveryStatus>(delivery1.Status, true));
         }
 
         [Fact()]
         public async void UpdateDeliveryStatusCannotSetStatusToCompletedIfNotApprovedTest()
         {
+            var delivery = new Delivery
+            {
+                OrderId = 10,
+                Status = DeliveryStatus.Created,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
+
             var controller = new DeliveryController(deliveryService, mapper);
-            var response = await controller.CompleteDelivery(5);
+            var response = await controller.CompleteDelivery(delivery.Id);
             var badResult = response as BadRequestObjectResult;
             Assert.NotNull(badResult);
             Assert.Equal(400, badResult.StatusCode);
@@ -447,8 +580,32 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void UpdateDeliveryStatusCannotSetStatusToApprovedIfNotStatusIsCreatedTest()
         {
+            var delivery = new Delivery
+            {
+                OrderId = 10,
+                Status = DeliveryStatus.Expired,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
             var controller = new DeliveryController(deliveryService, mapper); ;
-            var response = await controller.ApproveDelivery(5);
+            var response = await controller.ApproveDelivery(delivery.Id);
             var badResult = response as BadRequestObjectResult;
             Assert.NotNull(badResult);
             Assert.Equal(400, badResult.StatusCode);
@@ -458,8 +615,32 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void UpdateDeliveryStatusCanNotSetStatusToCancelIfStatusIsNotCompletedOrExpiredTest()
         {
+            var delivery = new Delivery
+            {
+                OrderId = 10,
+                Status = DeliveryStatus.Expired,
+                AccessWindow = new AccessWindow
+                {
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddHours(2)
+                },
+                Sender = new Partner
+                {
+                    Name = "Ikea"
+                },
+                Recipient = new User
+                {
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@google.com",
+                    Address = "Test Street, London",
+                    Phone = "0845345"
+                }
+            };
+            dbContext.Add(delivery);
+            dbContext.SaveChanges();
             var controller = new DeliveryController(deliveryService, mapper); ;
-            var response = await controller.CancelDelivery(6);
+            var response = await controller.CancelDelivery(delivery.Id);
             var badResult = response as BadRequestObjectResult;
             Assert.NotNull(badResult);
             Assert.Equal(400, badResult.StatusCode);

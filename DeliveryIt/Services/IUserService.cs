@@ -15,5 +15,6 @@ namespace DeliverIt.Services
         Task<User> UpdateUser(User user);
         Task<bool> UserExists(int id);
         Task<bool> UserExists(string email);
+        Task<User> AuthenticateUser(string email, string password);
     }
 }

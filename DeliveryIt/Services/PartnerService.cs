@@ -24,7 +24,23 @@ namespace DeliverIt.Services
 
         public async Task<bool> PartnerExists(string name)
         {
-            return await db.Partners.AnyAsync(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            // not best strategy to compare but quick one
+            return await db.Partners.AnyAsync(x => x.Name.ToLower() == name.ToLower());
+        }
+
+        public async Task<Partner> AuthenticatePartner(string name, string password)
+        {
+            if (await this.PartnerExists(name))
+            {
+                // not best strategy to compare but quick one
+                return await this.db.Partners.FirstOrDefaultAsync(x =>
+                    x.Name.ToLower() == name.ToLower() &&
+                    x.Password.ToLower() == password.ToLower());
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<IList<Partner>> GetAllPartners()

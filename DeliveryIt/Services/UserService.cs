@@ -24,7 +24,23 @@ namespace DeliverIt.Services
 
         public async Task<bool> UserExists(string email)
         {
-            return await db.Users.AnyAsync(x => x.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            // not best strategy to compare but quick one
+            return await db.Users.AnyAsync(x => x.Email.ToLower() == email.ToLower());
+        }
+
+        public async Task<User> AuthenticateUser(string email, string password)
+        {
+            if (await this.UserExists(email))
+            {
+                // not best strategy to compare but quick one
+                return await this.db.Users.FirstOrDefaultAsync(x =>
+                    x.Email.ToLower() == email.ToLower() &&
+                    x.Password.ToLower() == password.ToLower());
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<IList<User>> GetAllUsers()

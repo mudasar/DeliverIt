@@ -16,6 +16,9 @@ namespace DeliverIt.ViewModels.User
         [Required]
         [EmailAddress]
         public string Email { get; set; }
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Password is required.")]
+        [StringLength(50, MinimumLength = 5)]
+        public string Password { get; set; }
         [Required(AllowEmptyStrings = false)]
         [StringLength(100, ErrorMessage = "Invalid Length", MinimumLength = 5)]
         public string Phone { get; set; }

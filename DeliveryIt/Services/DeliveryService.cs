@@ -19,7 +19,7 @@ namespace DeliverIt.Services
 
         public async Task<IList<Delivery>> GetAllDeliveries()
         {
-            return await db.Deliveries.ToListAsync<Delivery>();
+            return await db.Deliveries.Include(x => x.Sender).Include(x => x.Recipient).Include(x=> x.AccessWindow).ToListAsync<Delivery>();
         }
         public async Task<bool> DeliveryExists(int id)
         {
@@ -34,7 +34,7 @@ namespace DeliverIt.Services
         }
         public async Task<Delivery> GetDeliveryById(int id)
         {
-            return await db.Deliveries.FirstOrDefaultAsync(x => x.Id == id);
+            return await db.Deliveries.Include(x => x.Sender).Include(x => x.Recipient).Include(x => x.AccessWindow).FirstOrDefaultAsync(x => x.Id == id);
         }
         public async Task<Delivery> CreateDelivery(Delivery delivery)
         {

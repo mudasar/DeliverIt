@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using DeliverIt.Controllers;
 using DeliverIt.Data;
+using DeliverIt.Helpers;
 using DeliverIt.Models;
 using DeliverIt.Services;
 using DeliverIt.ViewModels;
 using DeliverIt.ViewModels.Partner;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace DeliverIt.Tests.Controllers
@@ -16,6 +18,7 @@ namespace DeliverIt.Tests.Controllers
         private IMapper mapper;
         private IPartnerService partnerService;
         private DeliverItContext dbContext;
+        private IOptions<AppSettings> appSettings;
 
         public PartnerControllerTests()
         {
@@ -25,6 +28,7 @@ namespace DeliverIt.Tests.Controllers
                     cfg.AddProfile<TestMapperProfile>();
 
                 });
+
             mapper = config.CreateMapper();
             var options = new DbContextOptionsBuilder<DeliverItContext>()
                 .UseInMemoryDatabase(databaseName: "Add_writes_to_database")
@@ -38,14 +42,14 @@ namespace DeliverIt.Tests.Controllers
                 Name = "Ikea"
             });
             dbContext.SaveChanges();
-
+            appSettings = Options.Create<AppSettings>(new AppSettings());
         }
 
 
         [Fact()]
         public async void GetAllPartnersTest()
         {
-            var controller = new PartnerController(partnerService, mapper);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var partners = await controller.GetAll();
             Assert.NotEmpty(partners);
         }
@@ -53,7 +57,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void GetSinglePartnerTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Get(1);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
@@ -68,7 +72,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void GetReturnValidResponseIfPartnerNotFoundTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Get(-1);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
@@ -78,7 +82,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PostTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var model = new CreatePartnerViewModel()
             {
                 Name = "Amazon1",
@@ -97,7 +101,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PostCannotAddPartnerWithSameEmailTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var model = new CreatePartnerViewModel()
             {
                 Name = "Ikea",
@@ -113,7 +117,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var model = new UpdatePartnerViewModel()
             {
                 Id = 1,
@@ -132,7 +136,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutReturnValidResponseIfPartnerNotFoundTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Put(-5, new UpdatePartnerViewModel() { Id = -5 });
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
@@ -142,7 +146,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutReturnValidResponseIfPartnerNotFoundDueToIdMismatchTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Put(5, new UpdatePartnerViewModel() { Id = 4 });
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
@@ -152,7 +156,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void DeleteTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Delete(1);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
@@ -166,7 +170,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void DeleteReturnValidResponseIfPartnerNotFoundTest()
         {
-            var controller =new PartnerController(partnerService, mapper);
+                        var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Delete(-1);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
