@@ -13,7 +13,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using DeliverIt.Data;
+using DeliverIt.Middleware;
 using DeliverIt.Services;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Serilog;
 
 namespace DeliverIt
 {
@@ -58,28 +62,43 @@ namespace DeliverIt
                         };
                     };
                 });
-
+            // ensuring camel case json
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
             services.AddControllers();
 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DeliverItContext context)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+            if (env.IsProduction())
+            {
+                context.Database.Migrate();
+            }
+
 
             app.UseHttpsRedirection();
-
+            app.UseSerilogRequestLogging();
             app.UseRouting();
 
             app.UseAuthorization();
 
-            // Register the Swagger generator and the Swagger UI middlewares
+            // Register the Swagger generator and the Swagger UI
             app.UseOpenApi();
             app.UseSwaggerUi3();
+
+            app.UseAuthorization();
+
+            app.UseAuthentication();
+
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

@@ -34,10 +34,12 @@ namespace DeliverIt.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: "Add_writes_to_database")
                 .Options;
 
-            if (File.Exists("deliveryittest.db"))
-            {
-                File.Delete("deliveryittest.db");
-            }
+            //if (File.Exists("deliveryittest.db"))
+            //{
+            //    File.Delete("deliveryittest.db");
+            //}
+
+            
 
             var sqliteOptions = new DbContextOptionsBuilder<DeliverItContext>().UseSqlite("Data Source=deliveryittest.db", builder =>
             {
@@ -46,7 +48,7 @@ namespace DeliverIt.Tests.Controllers
             mapper = config.CreateMapper();
             dbContext = new DeliverItContext(options);
             dbSqlite = new DeliverItContext(sqliteOptions);
-
+            dbSqlite.Database.EnsureDeleted();
             dbSqlite.Database.Migrate();
 
             deliveryService = new DeliveryService(dbContext);
