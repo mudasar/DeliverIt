@@ -27,7 +27,7 @@ namespace DeliverIt.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(nullable: true)
+                    Name = table.Column<string>(maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -40,11 +40,11 @@ namespace DeliverIt.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    FirstName = table.Column<string>(nullable: true),
-                    LastName = table.Column<string>(nullable: true),
-                    Address = table.Column<string>(nullable: true),
-                    Phone = table.Column<string>(nullable: true),
-                    Email = table.Column<string>(nullable: true)
+                    FirstName = table.Column<string>(maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(maxLength: 100, nullable: false),
+                    Address = table.Column<string>(maxLength: 200, nullable: false),
+                    Phone = table.Column<string>(maxLength: 15, nullable: false),
+                    Email = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,9 +58,9 @@ namespace DeliverIt.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Status = table.Column<int>(nullable: false),
-                    RecipientId = table.Column<int>(nullable: true),
-                    SenderId = table.Column<int>(nullable: true),
-                    AccessWindowId = table.Column<int>(nullable: true),
+                    RecipientId = table.Column<int>(nullable: false),
+                    SenderId = table.Column<int>(nullable: false),
+                    AccessWindowId = table.Column<int>(nullable: false),
                     OrderId = table.Column<long>(nullable: false)
                 },
                 constraints: table =>
@@ -71,25 +71,31 @@ namespace DeliverIt.Migrations
                         column: x => x.AccessWindowId,
                         principalTable: "AccessWindow",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Deliveries_Users_RecipientId",
                         column: x => x.RecipientId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Deliveries_Partners_SenderId",
                         column: x => x.SenderId,
                         principalTable: "Partners",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Deliveries_AccessWindowId",
                 table: "Deliveries",
                 column: "AccessWindowId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Deliveries_OrderId",
+                table: "Deliveries",
+                column: "OrderId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Deliveries_RecipientId",
@@ -100,6 +106,18 @@ namespace DeliverIt.Migrations
                 name: "IX_Deliveries_SenderId",
                 table: "Deliveries",
                 column: "SenderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Partners_Name",
+                table: "Partners",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

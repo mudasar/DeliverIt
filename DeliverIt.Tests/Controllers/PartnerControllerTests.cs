@@ -69,7 +69,7 @@ namespace DeliverIt.Tests.Controllers
         public async void GetReturnValidResponseIfPartnerNotFoundTest()
         {
             var controller =new PartnerController(partnerService, mapper);
-            var response = await controller.Get(5);
+            var response = await controller.Get(-1);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
             Assert.Equal(404, notFoundResult.StatusCode);
@@ -81,7 +81,7 @@ namespace DeliverIt.Tests.Controllers
             var controller =new PartnerController(partnerService, mapper);
             var model = new CreatePartnerViewModel()
             {
-                Name = "Amazon",
+                Name = "Amazon1",
 
             };
             var response = await controller.Post(model);
@@ -133,7 +133,7 @@ namespace DeliverIt.Tests.Controllers
         public async void PutReturnValidResponseIfPartnerNotFoundTest()
         {
             var controller =new PartnerController(partnerService, mapper);
-            var response = await controller.Put(5, new UpdatePartnerViewModel() { Id = 5 });
+            var response = await controller.Put(-5, new UpdatePartnerViewModel() { Id = -5 });
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
             Assert.Equal(404, notFoundResult.StatusCode);

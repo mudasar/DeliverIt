@@ -34,7 +34,7 @@ namespace DeliverIt.Services
 
         public async Task<Partner> GetPartnerById(int id)
         {
-            return await db.Partners.FirstAsync(x => x.Id == id);
+            return await db.Partners.FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<Partner> CreatePartner(Partner partner)

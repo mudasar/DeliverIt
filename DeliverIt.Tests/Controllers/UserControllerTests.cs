@@ -76,7 +76,7 @@ namespace DeliverIt.Tests.Controllers
         public async void GetReturnValidResponseIfUserNotFoundTest()
         {
             var controller = new UserController(userService, mapper);
-            var response = await controller.Get(5);
+            var response = await controller.Get(-5);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
             Assert.Equal(404, notFoundResult.StatusCode);
@@ -178,7 +178,7 @@ namespace DeliverIt.Tests.Controllers
         public async void DeleteReturnValidResponseIfUserNotFoundTest()
         {
             var controller = new UserController(userService, mapper);
-            var response = await controller.Delete(5);
+            var response = await controller.Delete(-5);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
             Assert.Equal(404, notFoundResult.StatusCode);

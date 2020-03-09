@@ -23,7 +23,13 @@ namespace DeliverIt.Helpers
             CreateMap<Partner, PartnerViewModel>();
 
 
-            CreateMap<CreateDeliveryViewModel, Delivery>();
+            CreateMap<CreateDeliveryViewModel, Delivery>()
+                .ForMember(dest => dest.SenderId, src => src.MapFrom(m => m.PartnerId))
+                .ForMember(dest => dest.AccessWindow, src => src.MapFrom(m => new AccessWindow
+                {
+                    StartTime = m.StartTime,
+                    EndTime = m.EndTime
+                }));
             CreateMap<UpdateDeliveryViewModel, Delivery>();
             CreateMap<AccessWindow, AccessWindowViewModel>();
             CreateMap<Delivery, OrderViewModel>()
@@ -32,8 +38,12 @@ namespace DeliverIt.Helpers
             //CreateMap<UpdateDeliveryViewModel, AccessWindow>()
             //    .ForMember(dest => dest.StartTime, src => src.MapFrom(m => m.StartTime))
             //    .ForMember(dest => dest.EndTime, src => src.MapFrom(m => m.EndTime));
-           
-            CreateMap<Delivery, DeliveryViewModel>();
+
+            CreateMap<Delivery, DeliveryViewModel>().ForMember(dest => dest.Order, src => src.MapFrom(m => new OrderViewModel
+            {
+                OrderNumber = m.OrderId.ToString(),
+                Sender = m.Sender.Name
+            }));
         }
     }
 }

@@ -34,7 +34,7 @@ namespace DeliverIt.Services
 
         public async Task<User> GetUserById(int id)
         {
-            return await db.Users.FirstAsync(x => x.Id == id);
+            return await db.Users.FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<User> CreateUser(User user)

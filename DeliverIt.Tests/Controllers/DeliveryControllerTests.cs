@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 
 namespace DeliverIt.Tests.Controllers
@@ -17,6 +18,8 @@ namespace DeliverIt.Tests.Controllers
         private IMapper mapper;
         private IDeliveryService deliveryService;
         private DeliverItContext dbContext;
+
+        private DeliverItContext dbSqlite;
 
         public DeliveryControllerTests()
         {
@@ -30,8 +33,22 @@ namespace DeliverIt.Tests.Controllers
             var options = new DbContextOptionsBuilder<DeliverItContext>()
                 .UseInMemoryDatabase(databaseName: "Add_writes_to_database")
                 .Options;
+
+            if (File.Exists("deliveryittest.db"))
+            {
+                File.Delete("deliveryittest.db");
+            }
+
+            var sqliteOptions = new DbContextOptionsBuilder<DeliverItContext>().UseSqlite("Data Source=deliveryittest.db", builder =>
+            {
+               
+            }).Options;
             mapper = config.CreateMapper();
             dbContext = new DeliverItContext(options);
+            dbSqlite = new DeliverItContext(sqliteOptions);
+
+            dbSqlite.Database.Migrate();
+
             deliveryService = new DeliveryService(dbContext);
             dbContext.Add<Delivery>(new Delivery
             {
@@ -179,6 +196,48 @@ namespace DeliverIt.Tests.Controllers
 
             var delivery = okResult.Value as DeliveryViewModel;
             Assert.NotEqual(1, delivery.Id);
+        }
+
+
+        [Fact()]
+        public async void PostWithRelatedDataTest()
+        {
+            var relatedDeliveryService = new DeliveryService(dbSqlite);
+            dbSqlite.Partners.Add(new Partner()
+            {
+                Name = "Ikea"
+            });
+            dbSqlite.Users.Add(new User
+            {
+                FirstName = "John",
+                LastName = "Doe",
+                Email = "john.doe@google.com",
+                Address = "Test Street, London",
+                Phone = "0845345"
+            });
+            dbSqlite.SaveChanges();
+
+            var controller = new DeliveryController(relatedDeliveryService, mapper); ;
+            var model = new CreateDeliveryViewModel()
+            {
+                OrderId = 30,
+                RecipientId = 1,
+                PartnerId = 1,
+                StartTime = DateTime.Now.AddDays(2).AddHours(7),
+                EndTime = DateTime.Now.AddDays(2).AddHours(10),
+
+            };
+            var response = await controller.Post(model);
+            var okResult = response as OkObjectResult;
+            Assert.NotNull(okResult);
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.NotNull(okResult.Value);
+
+            var delivery = okResult.Value as DeliveryViewModel;
+            Assert.NotEqual(0, delivery.Id);
+            Assert.NotNull(delivery.AccessWindow);
+            Assert.NotNull(delivery.Recipient);
+            Assert.NotNull(delivery.Order);
         }
 
         [Fact()]

@@ -34,7 +34,7 @@ namespace DeliverIt.Services
         }
         public async Task<Delivery> GetDeliveryById(int id)
         {
-            return await db.Deliveries.FirstAsync(x => x.Id == id);
+            return await db.Deliveries.FirstOrDefaultAsync(x => x.Id == id);
         }
         public async Task<Delivery> CreateDelivery(Delivery delivery)
         {

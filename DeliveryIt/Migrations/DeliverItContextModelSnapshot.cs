@@ -44,16 +44,16 @@ namespace DeliverIt.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("AccessWindowId")
+                    b.Property<int>("AccessWindowId")
                         .HasColumnType("int");
 
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint");
 
-                    b.Property<int?>("RecipientId")
+                    b.Property<int>("RecipientId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("SenderId")
+                    b.Property<int>("SenderId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
@@ -62,6 +62,9 @@ namespace DeliverIt.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccessWindowId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
 
                     b.HasIndex("RecipientId");
 
@@ -78,9 +81,14 @@ namespace DeliverIt.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(200)")
+                        .HasMaxLength(200);
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Partners");
                 });
@@ -93,21 +101,33 @@ namespace DeliverIt.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(200)")
+                        .HasMaxLength(200);
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(100)")
+                        .HasMaxLength(100);
 
                     b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(100)")
+                        .HasMaxLength(100);
 
                     b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(15)")
+                        .HasMaxLength(15);
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -116,15 +136,21 @@ namespace DeliverIt.Migrations
                 {
                     b.HasOne("DeliverIt.Models.AccessWindow", "AccessWindow")
                         .WithMany()
-                        .HasForeignKey("AccessWindowId");
+                        .HasForeignKey("AccessWindowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("DeliverIt.Models.User", "Recipient")
                         .WithMany()
-                        .HasForeignKey("RecipientId");
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("DeliverIt.Models.Partner", "Sender")
                         .WithMany()
-                        .HasForeignKey("SenderId");
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

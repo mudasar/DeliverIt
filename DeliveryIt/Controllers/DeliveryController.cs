@@ -71,6 +71,7 @@ namespace DeliverIt.Controllers
             }
 
             var newDelivery = mapper.Map<Delivery>(model);
+          
             var delivery = await deliveryService.CreateDelivery(newDelivery);
 
             var deliveryModel = mapper.Map<DeliveryViewModel>(delivery);
