@@ -1,4 +1,4 @@
-﻿namespace DeliveryIt.Models
+﻿namespace DeliverIt.Models
 {
     public enum DeliveryStatus
     {

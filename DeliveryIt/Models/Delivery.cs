@@ -2,10 +2,14 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DeliveryIt.Models
+namespace DeliverIt.Models
 {
     public class Delivery
     {
+        public Delivery()
+        {
+            AccessWindow = new AccessWindow();
+        }
         public int Id { get; set; }
         public DeliveryStatus Status { get; set; }
         public User Recipient { get; set; }

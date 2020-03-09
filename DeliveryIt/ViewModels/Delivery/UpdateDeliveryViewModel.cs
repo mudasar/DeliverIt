@@ -1,7 +1,7 @@
-﻿using DeliveryIt.Models;
+﻿using DeliverIt.Models;
 using System;
 
-namespace DeliveryIt.ViewModels.Delivery
+namespace DeliverIt.ViewModels.Delivery
 {
     public class UpdateDeliveryViewModel
     {

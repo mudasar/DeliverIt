@@ -1,4 +1,4 @@
-using DeliveryIt.Models;
+using DeliverIt.Models;
 using System;
 using Xunit;
 

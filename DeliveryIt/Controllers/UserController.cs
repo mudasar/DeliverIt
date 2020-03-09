@@ -2,46 +2,44 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DeliveryIt.Models;
-using DeliveryIt.ViewModels;
-using DeliveryIt.ViewModels.User;
+using AutoMapper;
+using DeliverIt.Models;
+using DeliverIt.Services;
+using DeliverIt.ViewModels;
+using DeliverIt.ViewModels.User;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DeliveryIt.Controllers
+namespace DeliverIt.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
 
-        private readonly List<User> users = new List<User>()
+        private readonly IUserService userService;
+        private readonly IMapper mapper;
+
+        public UserController(IUserService userService, IMapper mapper)
         {
-            new User()
-            {
-                Id = 1,
-                FirstName = "John",
-                LastName = "Doe",
-                Address = "Test Street, London",
-                Email = "john.doe@google.com",
-                Phone  = "4475123456"
-            }
-        };
+            this.mapper = mapper;
+            this.userService = userService;
+        }
 
         // GET: api/User
         [HttpGet]
-        public async Task<IEnumerable<User>> Get()
+        public async Task<IActionResult> GetAll()
         {
-            return users;
+            return Ok(await this.userService.GetAllUsers());
         }
 
         // GET: api/User/5
-        [HttpGet("{id}", Name = "Get")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            if (users.Any(x => x.Id == id))
+            if (await userService.UserExists(id))
             {
-                var user = users.FirstOrDefault(x => x.Id == id);
+                var user = await userService.GetUserById(id);
                 return Ok(user);
             }
             else
@@ -52,24 +50,29 @@ namespace DeliveryIt.Controllers
         }
 
         // POST: api/User
+        /// <summary>
+        /// Create a new User
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns>A new User Object</returns>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]     // Created
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]  // BadRequest
         public async Task<IActionResult> Post([FromBody] CreateUserViewModel model)
         {
-            if (users.Any(x => x.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase)))
+            if (await userService.UserExists(model.Email))
             {
                 return BadRequest("User already exists");
             }
-
-            var user = new User()
+            var newUser = new User()
             {
-                Id = users.Count + 1,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 Email = model.Email,
                 Phone = model.Phone,
                 Address = model.Address
             };
-            users.Add(user);
+            var user = await userService.CreateUser(newUser);
             return Ok(user);
         }
 
@@ -82,9 +85,9 @@ namespace DeliveryIt.Controllers
                 return NotFound($"User with id {id} was not found");
             }
 
-            if (users.Any(x => x.Id == id))
+            if (await userService.UserExists(id))
             {
-                var user = users.FirstOrDefault(x => x.Id == id);
+                var user = await userService.GetUserById(id);
 
                 user.FirstName = model.FirstName;
                 user.LastName = model.LastName;
@@ -92,8 +95,8 @@ namespace DeliveryIt.Controllers
                 user.Phone = model.Phone;
                 user.Address = model.Address;
 
-
-                return Ok(user);
+                var updatedUser = await userService.UpdateUser(user);
+                return Ok(updatedUser);
             }
             else
             {
@@ -105,10 +108,9 @@ namespace DeliveryIt.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (users.Any(x => x.Id == id))
+            if (await userService.UserExists(id))
             {
-                var user = users.FirstOrDefault(x => x.Id == id);
-                users.Remove(user);
+                var user = await userService.RemoveUser(id);
                 return Ok(user);
             }
             else

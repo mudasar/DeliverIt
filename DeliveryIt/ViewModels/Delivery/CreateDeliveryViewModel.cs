@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DeliveryIt.ViewModels.Delivery
+namespace DeliverIt.ViewModels.Delivery
 {
     public class CreateDeliveryViewModel
     {

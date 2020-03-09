@@ -5,14 +5,13 @@ using DeliverIt.ViewModels.Partner;
 using DeliverIt.ViewModels.User;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
-namespace DeliverIt.Helpers
+namespace DeliverIt.Tests
 {
-    public class AutomapperProfile : Profile
+    public class TestMapperProfile : Profile
     {
-        public AutomapperProfile()
+        public TestMapperProfile()
         {
             CreateMap<CreateUserViewModel, User>();
             CreateMap<UpdateUserViewModel, User>();
@@ -21,7 +20,6 @@ namespace DeliverIt.Helpers
             CreateMap<CreatePartnerViewModel, Partner>();
             CreateMap<UpdatePartnerViewModel, Partner>();
             CreateMap<Partner, PartnerViewModel>();
-
 
             CreateMap<CreateDeliveryViewModel, Delivery>();
             CreateMap<UpdateDeliveryViewModel, Delivery>();
@@ -32,7 +30,6 @@ namespace DeliverIt.Helpers
             //CreateMap<UpdateDeliveryViewModel, AccessWindow>()
             //    .ForMember(dest => dest.StartTime, src => src.MapFrom(m => m.StartTime))
             //    .ForMember(dest => dest.EndTime, src => src.MapFrom(m => m.EndTime));
-           
             CreateMap<Delivery, DeliveryViewModel>();
         }
     }

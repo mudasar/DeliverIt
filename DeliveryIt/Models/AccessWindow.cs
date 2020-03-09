@@ -1,9 +1,10 @@
 ﻿using System;
 
-namespace DeliveryIt.Models
+namespace DeliverIt.Models
 {
-    public struct AccessWindow
+    public class AccessWindow
     {
+        public int Id { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
     }

@@ -5,11 +5,11 @@ VisualStudioVersion = 16.0.29827.131
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{066BE165-FAB1-440D-B8D0-486742211B22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeliverIt.Tests", "DeliverIt.Tests\DeliverIt.Tests.csproj", "{D6F902B5-A0D0-4672-893A-1DC5E59A9C2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeliverIt.Tests", "DeliverIt.Tests\DeliverIt.Tests.csproj", "{D6F902B5-A0D0-4672-893A-1DC5E59A9C2F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{1EE0847F-89F3-4866-9707-AF868D002988}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeliveryIt", "DeliveryIt\DeliveryIt.csproj", "{9B24B177-BC31-4CC5-A7DF-BA05B9F20900}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeliverIt", "DeliveryIt\DeliverIt.csproj", "{9B24B177-BC31-4CC5-A7DF-BA05B9F20900}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

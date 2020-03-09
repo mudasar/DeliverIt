@@ -2,87 +2,46 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DeliveryIt.Models;
-using DeliveryIt.ViewModels;
-using DeliveryIt.ViewModels.Delivery;
+using AutoMapper;
+using DeliverIt.Models;
+using DeliverIt.Services;
+using DeliverIt.ViewModels;
+using DeliverIt.ViewModels.Delivery;
+using DeliverIt.ViewModels.User;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DeliveryIt.Controllers
+namespace DeliverIt.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class DeliveryController : ControllerBase
     {
-        private readonly List<Delivery> deliveries = new List<Delivery>()
+        private readonly IDeliveryService deliveryService;
+        private readonly IMapper mapper;
+        public DeliveryController(IDeliveryService deliveryService, IMapper mapper)
         {
-            new Delivery()
-            {
-                Id = 1,
-                OrderId = 1,
-
-                Status =DeliveryStatus.Created,
-                Sender = new Partner()
-                {
-                    Id = 1,
-                    Name = "IKea"
-
-                },
-                Recipient = new User()
-                {
-                    Id = 1,
-                    FirstName = "John",
-                    LastName = "Doe",
-                    Phone = "0766574747",
-                    Email = "john.doe@google.com",
-                    Address = "123 Street, London"
-                },
-                AccessWindow = new AccessWindow()
-                {
-                    StartTime = DateTime.Now.AddHours(5),
-                    EndTime = DateTime.Now.AddHours(7),
-                }
-            }
-        };
-
-        public DeliveryController()
-        {
-
+            this.mapper = mapper;
+            this.deliveryService = deliveryService;
         }
+
 
         // GET: api/Delivery
         [HttpGet]
-        public async Task<IEnumerable<Delivery>> Get()
+        public async Task<IActionResult> GetAll()
         {
-            return deliveries;
+            var deliveries = await deliveryService.GetAllDeliveries();
+            return Ok(mapper.Map<List<DeliveryViewModel>>(deliveries));
         }
 
         // GET: api/Delivery/5
-        [HttpGet("{id}", Name = "Get")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            if (deliveries.Any(x => x.Id == id))
+            if (await deliveryService.DeliveryExists(id))
             {
-                var delivery = deliveries.FirstOrDefault(x => x.Id == id);
-
-                // TODO use automapper to map the objects
-
-                var model = new DeliveryViewModel();
-                model.Id = delivery.Id;
-                model.Status = delivery.Status;
-                model.Order = new OrderViewModel
-                {
-                    OrderNumber = delivery.OrderId.ToString(),
-                    Sender = delivery.Sender.Name
-                };
-                model.Recipient = new ViewModels.User.UserViewModel
-                {
-                    Name = delivery.Recipient.Name,
-                    Address = delivery.Recipient.Address,
-                    PhoneNumber = delivery.Recipient.Phone,
-                };
-                model.AccessWindow = delivery.AccessWindow;
-
+                var delivery = await deliveryService.GetDeliveryById(id);
+                var model = mapper.Map<DeliveryViewModel>(delivery);
                 return Ok(model);
             }
             else
@@ -96,7 +55,7 @@ namespace DeliveryIt.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] CreateDeliveryViewModel model)
         {
-            if (deliveries.Any(x => x.OrderId == model.OrderId))
+            if (await deliveryService.DeliveryExists(model.OrderId))
             {
                 return BadRequest("Delivery for this order already exists");
             }
@@ -111,23 +70,10 @@ namespace DeliveryIt.Controllers
                 return BadRequest($"{nameof(model.StartTime)} cannot be greater than {nameof(model.EndTime)}");
             }
 
-            var delivery = new Delivery()
-            {
-                Id = deliveries.Count + 1,
-                Status = DeliveryStatus.Created,
-                AccessWindow = new AccessWindow
-                {
-                    StartTime = model.StartTime,
-                    EndTime = model.EndTime,
-                }
-            };
+            var newDelivery = mapper.Map<Delivery>(model);
+            var delivery = await deliveryService.CreateDelivery(newDelivery);
 
-            deliveries.Add(delivery);
-            // TODO: use automapper
-            var deliveryModel = new DeliveryViewModel
-            {
-                Id = delivery.Id
-            };
+            var deliveryModel = mapper.Map<DeliveryViewModel>(delivery);
             return Ok(deliveryModel);
         }
 
@@ -150,22 +96,14 @@ namespace DeliveryIt.Controllers
                 return BadRequest($"{nameof(model.StartTime)} cannot be greater than {nameof(model.EndTime)}");
             }
 
-            if (deliveries.Any(x => x.Id == id))
+            if (await deliveryService.DeliveryExists(id))
             {
-                var delivery = deliveries.FirstOrDefault(x => x.Id == id);
+                var delivery = await deliveryService.GetDeliveryById(id);
                 delivery.Status = model.Status;
-                delivery.AccessWindow = new AccessWindow
-                {
-                    StartTime = model.StartTime,
-                    EndTime = model.EndTime,
-                };
-
-                // TODO: use automapper
-                var deliveryModel = new DeliveryViewModel
-                {
-                    Id = delivery.Id,
-                    Status = delivery.Status
-                };
+                delivery.AccessWindow.StartTime = model.StartTime;
+                delivery.AccessWindow.EndTime = model.EndTime;
+                delivery = await deliveryService.UpdateDelivery(delivery);
+                var deliveryModel = mapper.Map<DeliveryViewModel>(delivery);
                 return Ok(deliveryModel);
             }
             else
@@ -175,20 +113,73 @@ namespace DeliveryIt.Controllers
         }
 
         // PUT: api/Delivery/5
-        [HttpPut("update-status/{id}")]
-        public async Task<IActionResult> UpdateDeliveryStatus(int id, [FromBody] DeliveryStatus status)
+        [HttpPut("approve-delivery/{id}")]
+        public async Task<IActionResult> ApproveDelivery(int id)
         {
-            if (deliveries.Any(x => x.Id == id))
+            if (await deliveryService.DeliveryExists(id))
             {
-                var delivery = deliveries.FirstOrDefault(x => x.Id == id);
-                delivery.Status = status;
-
-                // TODO: use automapper
-                var deliveryModel = new DeliveryViewModel
+                var delivery = await deliveryService.GetDeliveryById(id);
+                if (delivery.Status == DeliveryStatus.Created)
                 {
-                    Id = delivery.Id,
-                    Status = delivery.Status
-                };
+                    var deliveryModel = await UpdateDeliveryStatus(id, DeliveryStatus.Approved);
+                    return Ok(deliveryModel);
+                }
+                return BadRequest($"Delivery cannot be approved");
+            }
+            else
+            {
+                return NotFound($"Delivery with id {id} was not found");
+            }
+        }
+
+
+
+        // PUT: api/Delivery/5
+        [HttpPut("cancel-delivery/{id}")]
+        public async Task<IActionResult> CancelDelivery(int id)
+        {
+            if (await deliveryService.DeliveryExists(id))
+            {
+                var delivery = await deliveryService.GetDeliveryById(id);
+                if (delivery.Status == DeliveryStatus.Approved || delivery.Status == DeliveryStatus.Created || delivery.Status == DeliveryStatus.Completed)
+                {
+                    var deliveryModel = await UpdateDeliveryStatus(id, DeliveryStatus.Cancelled);
+                    return Ok(deliveryModel);
+                }
+                return BadRequest($"Delivery cannot be cannceled if expired");
+            }
+            else
+            {
+                return NotFound($"Delivery with id {id} was not found");
+            }
+        }
+
+
+        [HttpPut("complete-delivery/{id}")]
+        public async Task<IActionResult> CompleteDelivery(int id)
+        {
+            if (await deliveryService.DeliveryExists(id))
+            {
+                var delivery = await deliveryService.GetDeliveryById(id);
+                if (delivery.Status == DeliveryStatus.Approved)
+                {
+                    var deliveryModel = await UpdateDeliveryStatus(id, DeliveryStatus.Completed);
+                    return Ok(deliveryModel);
+                }
+                return BadRequest($"Delivery cannot be completed");
+            }
+            else
+            {
+                return NotFound($"Delivery with id {id} was not found");
+            }
+        }
+
+        [HttpPut("expire-delivery/{id}")]
+        public async Task<IActionResult> ExpireDelivery(int id)
+        {
+            if (await deliveryService.DeliveryExists(id))
+            {
+                var deliveryModel = await UpdateDeliveryStatus(id, DeliveryStatus.Expired);
                 return Ok(deliveryModel);
             }
             else
@@ -201,17 +192,25 @@ namespace DeliveryIt.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (deliveries.Any(x => x.Id == id))
+            if (await deliveryService.DeliveryExists(id))
             {
-                var delivery = deliveries.FirstOrDefault(x => x.Id == id);
-                deliveries.Remove(delivery);
-                // TODO: add automapper
+                var delivery = await deliveryService.RemoveDelivery(id);
                 return Ok(delivery);
             }
             else
             {
                 return NotFound($"Delivery with id {id} was not found");
             }
+        }
+
+
+        private async Task<DeliveryViewModel> UpdateDeliveryStatus(int id, DeliveryStatus status)
+        {
+            var delivery = await deliveryService.GetDeliveryById(id);
+            delivery.Status = status;
+            delivery = await deliveryService.UpdateDelivery(delivery);
+            var deliveryModel = mapper.Map<DeliveryViewModel>(delivery);
+            return deliveryModel;
         }
     }
 }
