@@ -22,6 +22,7 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
+using IO.Ably;
 
 namespace DeliverIt
 {
@@ -95,6 +96,8 @@ namespace DeliverIt
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
+
+            services.AddSingleton<AblyRealtime>(new AblyRealtime(appSettings.AblyApiKey));
             services.AddControllers();
 
         }

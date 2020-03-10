@@ -10,6 +10,7 @@ using DeliverIt.Services;
 using DeliverIt.ViewModels;
 using DeliverIt.ViewModels.Delivery;
 using DeliverIt.ViewModels.User;
+using IO.Ably;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +23,8 @@ namespace DeliverIt.Controllers
     {
         private readonly IDeliveryService deliveryService;
         private readonly IMapper mapper;
+
+
         public DeliveryController(IDeliveryService deliveryService, IMapper mapper)
         {
             this.mapper = mapper;
@@ -117,7 +120,16 @@ namespace DeliverIt.Controllers
             var newDelivery = mapper.Map<Delivery>(model);
 
             var delivery = await deliveryService.CreateDelivery(newDelivery);
-            // TODO: needs a better strategy
+
+            // TODO: inject using constructor   integration require restructuring of the application
+            // TODO: messages should be sent to specific user channels
+            // TODO: also on each update of delivery a message should be published to relevent partner or user
+            var ably = new AblyRealtime("E9RI8g.3I-QYw:F0Q-ZJK5Xwm2bGvf");
+            var channel = ably.Channels.Get("Users");
+
+            // Publish a message to the test channel
+            channel.Publish("Delivery Add", $"A new delivery is added");
+            // TODO: needs a better strategy to return the complete delivery view model
             var deliveryModel = mapper.Map<DeliveryViewModel>(await deliveryService.GetDeliveryById(delivery.Id));
             return Ok(deliveryModel);
         }
