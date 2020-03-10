@@ -27,7 +27,10 @@ namespace DeliverIt.Tests.Services
             {
                 FirstName = "John",
                 LastName = "Doe",
-                Email = "john.doe@google.com"
+                Email = "john.doe@google.com",
+                Password = "Password",
+                Address = "Test Address",
+                Phone = "1234567"
             });
             // dbContext.Users.Add();
             dbContext.SaveChanges();
@@ -108,6 +111,21 @@ namespace DeliverIt.Tests.Services
                  var user = await userService.RemoveUser(-1);
                  Assert.NotNull(user);
              });
+        }
+
+        [Fact]
+        public async void CanValidateUser()
+        {
+            var user = await userService.AuthenticateUser("john.doe@google.com", "password");
+            Assert.NotNull(user);
+            Assert.NotNull(user.FirstName);
+        }
+
+        [Fact]
+        public async void CannotLoginWithInvalidCredentials()
+        {
+            var user = await userService.AuthenticateUser("john.doe@google.com", "test");
+            Assert.Null(user);
         }
 
         [Fact]

@@ -29,7 +29,7 @@ namespace DeliverIt.Tests.Controllers
                     cfg.AddProfile<TestMapperProfile>();
 
                 });
-            appSettings = Options.Create<AppSettings>(new AppSettings());
+            appSettings = Options.Create<AppSettings>(new AppSettings{ Secret = "Thisisaverylonglongsecret"});
             var options = new DbContextOptionsBuilder<DeliverItContext>()
                 .UseInMemoryDatabase(databaseName: "Add_writes_to_database")
                 .Options;
@@ -40,7 +40,10 @@ namespace DeliverIt.Tests.Controllers
             {
                 FirstName = "John",
                 LastName = "Doe",
-                Email = "john.doe@google.com"
+                Email = "john.doe@google.com",
+                Password = "password",
+                Address = "Test Address",
+                Phone = "123456"
             });
             dbContext.SaveChanges();
         }
@@ -63,7 +66,7 @@ namespace DeliverIt.Tests.Controllers
         public async void GetSingleUserTest()
         {
 
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var response = await controller.Get(1);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
@@ -78,17 +81,37 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void GetReturnValidResponseIfUserNotFoundTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var response = await controller.Get(-5);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
             Assert.Equal(404, notFoundResult.StatusCode);
         }
 
+        [Fact]
+        public async void AuthenticateUser()
+        {
+           var controller = new UserController(userService, mapper, appSettings);
+            var model = new UserLoginViewModel()
+            {
+                Email = "john.doe@google.com",
+                Password = "password",
+                
+            };
+            var response = await controller.Authenticate(model);
+            var okResult = response as OkObjectResult;
+            Assert.NotNull(okResult);
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.NotNull(okResult.Value);
+
+            var token = okResult.Value as dynamic;
+            Assert.NotNull(token);
+        }
+
         [Fact()]
         public async void PostTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var model = new CreateUserViewModel()
             {
                 FirstName = "John",
@@ -112,7 +135,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PostCannotAddUserWithSameEmailTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var model = new CreateUserViewModel()
             {
                 FirstName = "John",
@@ -133,7 +156,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var model = new UpdateUserViewModel()
             {
                 Id = 1,
@@ -156,7 +179,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutReturnValidResponseIfUserNotFoundTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var response = await controller.Put(-5, new UpdateUserViewModel() { Id = -5 });
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
@@ -166,7 +189,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutReturnValidResponseIfUserNotFoundDueToIdMismatchTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var response = await controller.Put(5, new UpdateUserViewModel() { Id = 4 });
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
@@ -176,7 +199,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void DeleteTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var response = await controller.Delete(1);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
@@ -190,7 +213,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void DeleteReturnValidResponseIfUserNotFoundTest()
         {
-                        var controller = new UserController(userService, mapper, appSettings);
+            var controller = new UserController(userService, mapper, appSettings);
             var response = await controller.Delete(-5);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);

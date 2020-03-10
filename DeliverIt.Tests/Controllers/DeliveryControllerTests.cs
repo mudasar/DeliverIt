@@ -4,11 +4,13 @@ using DeliverIt.Data;
 using DeliverIt.Models;
 using DeliverIt.Services;
 using DeliverIt.ViewModels.Delivery;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Claims;
 using Xunit;
 
 namespace DeliverIt.Tests.Controllers
@@ -18,7 +20,7 @@ namespace DeliverIt.Tests.Controllers
         private IMapper mapper;
         private IDeliveryService deliveryService;
         private DeliverItContext dbContext;
-        
+
 
         private DeliverItContext dbSqlite;
 
@@ -44,7 +46,7 @@ namespace DeliverIt.Tests.Controllers
 
             var sqliteOptions = new DbContextOptionsBuilder<DeliverItContext>().UseSqlite("Data Source=deliveryittest.db", builder =>
             {
-               
+
             }).Options;
             mapper = config.CreateMapper();
             dbContext = new DeliverItContext(options);
@@ -55,7 +57,7 @@ namespace DeliverIt.Tests.Controllers
             deliveryService = new DeliveryService(dbContext);
             dbContext.Add<Delivery>(new Delivery
             {
-               
+
                 OrderId = 1,
                 Status = DeliveryStatus.Created,
                 AccessWindow = new AccessWindow
@@ -78,7 +80,7 @@ namespace DeliverIt.Tests.Controllers
             });
             dbContext.Add<Delivery>(new Delivery
             {
-               
+
                 OrderId = 10,
                 Status = DeliveryStatus.Approved,
                 AccessWindow = new AccessWindow
@@ -86,11 +88,11 @@ namespace DeliverIt.Tests.Controllers
                     StartTime = DateTime.Now,
                     EndTime = DateTime.Now.AddHours(2)
                 },
-                
+
             });
             dbContext.Add<Delivery>(new Delivery
             {
-               
+
                 OrderId = 11,
                 Status = DeliveryStatus.Approved,
                 AccessWindow = new AccessWindow
@@ -98,11 +100,11 @@ namespace DeliverIt.Tests.Controllers
                     StartTime = DateTime.Now,
                     EndTime = DateTime.Now.AddHours(2)
                 },
-                
+
             });
             dbContext.Add<Delivery>(new Delivery
             {
-               
+
                 OrderId = 13,
                 Status = DeliveryStatus.Approved,
                 AccessWindow = new AccessWindow
@@ -110,11 +112,11 @@ namespace DeliverIt.Tests.Controllers
                     StartTime = DateTime.Now,
                     EndTime = DateTime.Now.AddHours(2)
                 },
-                
+
             });
-             dbContext.Add<Delivery>(new Delivery
+            dbContext.Add<Delivery>(new Delivery
             {
-               
+
                 OrderId = 9,
                 Status = DeliveryStatus.Completed,
                 AccessWindow = new AccessWindow
@@ -122,11 +124,11 @@ namespace DeliverIt.Tests.Controllers
                     StartTime = DateTime.Now,
                     EndTime = DateTime.Now.AddHours(2)
                 },
-                
+
             });
-             dbContext.Add<Delivery>(new Delivery
+            dbContext.Add<Delivery>(new Delivery
             {
-               
+
                 OrderId = 10,
                 Status = DeliveryStatus.Expired,
                 AccessWindow = new AccessWindow
@@ -134,7 +136,7 @@ namespace DeliverIt.Tests.Controllers
                     StartTime = DateTime.Now,
                     EndTime = DateTime.Now.AddHours(2)
                 },
-                
+
             });
             dbContext.SaveChanges();
         }
@@ -143,6 +145,14 @@ namespace DeliverIt.Tests.Controllers
         public async void GetAllDeliveriesTest()
         {
             var controller = new DeliveryController(deliveryService, mapper);
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal()
+                }
+            };
+
             var response = await controller.GetAll();
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
@@ -182,8 +192,16 @@ namespace DeliverIt.Tests.Controllers
             dbContext.SaveChanges();
 
             var controller = new DeliveryController(deliveryService, mapper); ;
-           
-            
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new ClaimsIdentity(new Claim[]{
+                        new Claim(ClaimTypes.NameIdentifier, "1")
+                        }))
+                }
+            };
+
             var response1 = await controller.Get(delivery.Id);
             var okResult1 = response1 as OkObjectResult;
             Assert.NotNull(okResult1);
@@ -388,7 +406,7 @@ namespace DeliverIt.Tests.Controllers
         public async void ApproveDeliveryTest()
         {
             var delivery = new Delivery
-            { 
+            {
                 OrderId = 10,
                 Status = DeliveryStatus.Created,
                 AccessWindow = new AccessWindow
@@ -420,7 +438,7 @@ namespace DeliverIt.Tests.Controllers
             Assert.NotNull(okResult1.Value);
 
             var delivery1 = okResult1.Value as DeliveryViewModel;
-            Assert.Equal(DeliveryStatus.Approved, Enum.Parse<DeliveryStatus>( delivery1.Status, true));
+            Assert.Equal(DeliveryStatus.Approved, Enum.Parse<DeliveryStatus>(delivery1.Status, true));
         }
 
         [Fact()]
@@ -453,14 +471,14 @@ namespace DeliverIt.Tests.Controllers
 
 
             var controller = new DeliveryController(deliveryService, mapper); ;
-           
+
             var response1 = await controller.CompleteDelivery(delivery.Id);
             var okResult1 = response1 as OkObjectResult;
             Assert.NotNull(okResult1);
             Assert.Equal(200, okResult1.StatusCode);
             Assert.NotNull(okResult1.Value);
 
-            var delivery1= okResult1.Value as DeliveryViewModel;
+            var delivery1 = okResult1.Value as DeliveryViewModel;
             Assert.Equal(DeliveryStatus.Completed, Enum.Parse<DeliveryStatus>(delivery1.Status, true));
         }
 

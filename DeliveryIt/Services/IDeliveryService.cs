@@ -15,5 +15,7 @@ namespace DeliverIt.Services
 
         Task<Delivery> CreateDelivery(Delivery delivery);
         Task<Delivery> UpdateDelivery(Delivery delivery);
+        Task<IList<Delivery>> GetAllDeliveriesForPartner(int partnerId);
+        Task<IList<Delivery>> GetAllDeliveriesForUser(int useId);
     }
 }

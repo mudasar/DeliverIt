@@ -21,6 +21,25 @@ namespace DeliverIt.Services
         {
             return await db.Deliveries.Include(x => x.Sender).Include(x => x.Recipient).Include(x=> x.AccessWindow).ToListAsync<Delivery>();
         }
+
+        public async Task<IList<Delivery>> GetAllDeliveriesForPartner(int partnerId)
+        {
+            return await db.Deliveries.Where(x => x.SenderId == partnerId)
+                .Include(x => x.Sender)
+                .Include(x => x.Recipient)
+                .Include(x=> x.AccessWindow)
+                .ToListAsync<Delivery>();
+        }
+
+        public async Task<IList<Delivery>> GetAllDeliveriesForUser(int userId)
+        {
+            return await db.Deliveries.Where(x => x.RecipientId == userId)
+                .Include(x => x.Sender)
+                .Include(x => x.Recipient)
+                .Include(x=> x.AccessWindow)
+                .ToListAsync<Delivery>();
+        }
+
         public async Task<bool> DeliveryExists(int id)
         {
             return await db.Deliveries.AnyAsync(x => x.Id == id);
@@ -53,5 +72,6 @@ namespace DeliverIt.Services
         {
             return await db.Deliveries.AnyAsync(x => x.OrderId == orderId);
         }
+        
     }
 }

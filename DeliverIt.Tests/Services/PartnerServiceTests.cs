@@ -22,7 +22,8 @@ namespace DeliverIt.Tests.Services
             partnerService = new PartnerService(dbContext);
             dbContext.Partners.Add(new Partner
             {
-                Name = "Ikea"
+                Name = "Ikea",
+                Password = "password"
             });
             dbContext.SaveChanges();
         }
@@ -78,6 +79,21 @@ namespace DeliverIt.Tests.Services
         {
             var exists = await partnerService.PartnerExists("Google");
             Assert.False(exists);
+        }
+
+        [Fact]
+        public async void CanValidateUser()
+        {
+            var partner = await partnerService.AuthenticatePartner("ikea", "password");
+            Assert.NotNull(partner);
+            Assert.NotNull(partner.Name);
+        }
+
+        [Fact]
+        public async void CannotLoginWithInvalidCredentials()
+        {
+            var partner = await partnerService.AuthenticatePartner("ikea", "test");
+            Assert.Null(partner);
         }
 
         [Fact]

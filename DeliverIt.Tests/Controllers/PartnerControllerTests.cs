@@ -37,12 +37,13 @@ namespace DeliverIt.Tests.Controllers
             dbContext = new DeliverItContext(options);
             partnerService = new PartnerService(dbContext);
 
-             dbContext.Partners.Add(new Partner
+            dbContext.Partners.Add(new Partner
             {
-                Name = "Ikea"
+                Name = "Ikea",
+                Password = "password"
             });
             dbContext.SaveChanges();
-            appSettings = Options.Create<AppSettings>(new AppSettings());
+            appSettings = Options.Create<AppSettings>(new AppSettings { Secret = "Thisisaverylonglongsecret" });
         }
 
 
@@ -57,7 +58,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void GetSinglePartnerTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Get(1);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
@@ -72,17 +73,37 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void GetReturnValidResponseIfPartnerNotFoundTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Get(-1);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
             Assert.Equal(404, notFoundResult.StatusCode);
         }
 
+        [Fact]
+        public async void AuthenticatePartner()
+        {
+            var controller = new PartnerController(partnerService, mapper, appSettings);
+            var model = new PartnerLoginViewModel()
+            {
+                Name = "ikea",
+                Password = "password",
+
+            };
+            var response = await controller.Authenticate(model);
+            var okResult = response as OkObjectResult;
+            Assert.NotNull(okResult);
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.NotNull(okResult.Value);
+
+            var token = okResult.Value as dynamic;
+            Assert.NotNull(token);
+        }
+
         [Fact()]
         public async void PostTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var model = new CreatePartnerViewModel()
             {
                 Name = "Amazon1",
@@ -101,7 +122,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PostCannotAddPartnerWithSameEmailTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var model = new CreatePartnerViewModel()
             {
                 Name = "Ikea",
@@ -117,7 +138,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var model = new UpdatePartnerViewModel()
             {
                 Id = 1,
@@ -136,7 +157,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutReturnValidResponseIfPartnerNotFoundTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Put(-5, new UpdatePartnerViewModel() { Id = -5 });
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
@@ -146,7 +167,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void PutReturnValidResponseIfPartnerNotFoundDueToIdMismatchTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Put(5, new UpdatePartnerViewModel() { Id = 4 });
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
@@ -156,7 +177,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void DeleteTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Delete(1);
             var okResult = response as OkObjectResult;
             Assert.NotNull(okResult);
@@ -170,7 +191,7 @@ namespace DeliverIt.Tests.Controllers
         [Fact()]
         public async void DeleteReturnValidResponseIfPartnerNotFoundTest()
         {
-                        var controller = new PartnerController(partnerService, mapper, appSettings);
+            var controller = new PartnerController(partnerService, mapper, appSettings);
             var response = await controller.Delete(-1);
             var notFoundResult = response as NotFoundObjectResult;
             Assert.NotNull(notFoundResult);
