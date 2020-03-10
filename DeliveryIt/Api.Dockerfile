@@ -8,4 +8,5 @@ RUN dotnet publish -c Release -o /app
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS final
 WORKDIR /app
 COPY --from=build /app .
+ENV ASPNETCORE_URLS http://*:5000
 ENTRYPOINT ["dotnet", "DeliverIt.dll"]

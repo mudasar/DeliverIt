@@ -1,0 +1,31 @@
+version: "3.7"
+
+services:
+
+  nginx:
+    container_name: nginx
+    image: deliveryit_nginx
+    #build:
+    #  context: ./nginx
+    #  dockerfile: nginx.dockerfile
+    ports:
+      - "80:80"
+    restart: always
+
+  api:
+    #container_name: api
+    depends_on:
+      - nginx
+ #   build:
+ #     context: ./
+# update and use docker image
+#      dockerfile: Api.Dockerfile
+    image: deliveryit_api
+    expose:
+      - "5000"
+    restart: always
+    volumes:
+        - E:\docker\logs\:/app/logs/
+    environment:
+        - ASPNETCORE_ConnectionStrings__DeliveryItContext="Server=.;Database=DeliveryItContext;User Id=sa;Password=;MultipleActiveResultSets=true;"
+        - ASPNETCORE_Logs__LogPath="/app/logs/"

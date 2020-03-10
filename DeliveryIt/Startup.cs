@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 using IO.Ably;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace DeliverIt
 {
@@ -114,8 +115,11 @@ namespace DeliverIt
                 context.Database.Migrate();
             }
 
-
-            app.UseHttpsRedirection();
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+            //app.UseHttpsRedirection();
             app.UseSerilogRequestLogging();
             app.UseRouting();
 

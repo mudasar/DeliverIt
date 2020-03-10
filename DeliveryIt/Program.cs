@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace DeliverIt
 {
@@ -29,10 +30,10 @@ namespace DeliverIt
                     outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} " +
                                     "{Properties:j}{NewLine}{Exception}")
                 .WriteTo.File(
-                    logPath + "deliver-api-" + ".log",
+                       logPath + "deliver-api-" + ".log",
                     outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} " +
                                         "{Properties:j}{NewLine}{Exception}",
-                    restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error,
+                    restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information,
                     shared: true
                     , rollingInterval: RollingInterval.Day)
                 .CreateLogger();
@@ -54,9 +55,10 @@ namespace DeliverIt
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+               
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseSerilog().UseStartup<Startup>();
-                });
+                    webBuilder.UseStartup<Startup>();
+                }).UseSerilog();
     }
 }
